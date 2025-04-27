@@ -124,7 +124,7 @@ public:
 		memcpy(pOverlappedEx->m_wsaBuf.buf, data, dataSize);		
 
 		// send queue가 비어있다면 push, 비어있지 않다면 SendIO()
-		// 2025 04 27 여기까지
+		// 2025 04 27 여기까지ㅎㅎ
 		if (mSendDataQueue.empty() == true)
 		{
 			mSendDataQueue.push(pOverlappedEx);
