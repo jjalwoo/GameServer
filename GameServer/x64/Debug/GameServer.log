@@ -1,0 +1,12 @@
+﻿  GameServer.cpp
+C:\Users\user\OneDrive\바탕 화면\GameServer\GameServer\GameServer\GameServer.h(63,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  (소스 파일 'GameServer.cpp'을(를) 컴파일하는 중)
+  
+  main.cpp
+C:\Users\user\OneDrive\바탕 화면\GameServer\GameServer\GameServer\GameServer.h(63,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+  코드를 생성하고 있습니다...
+  GameServer.vcxproj -> C:\Users\user\OneDrive\바탕 화면\GameServer\GameServer\x64\Debug\GameServer.exe
+  'pwsh.exe'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는
+  배치 파일이 아닙니다.
