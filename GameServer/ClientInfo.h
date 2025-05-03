@@ -94,7 +94,7 @@ public:
 	void SendCompleted(int size)
 	{
 		// send data 처리 완료
-		// 로그
+		std::cout << "Send Completed: " << size << std::endl;
 
 		//sendqueue ? -> sendqueue  pop delete  
 
@@ -123,16 +123,21 @@ public:
 
 		memcpy(pOverlappedEx->m_wsaBuf.buf, data, dataSize);		
 
-		// send queue가 비어있다면 push, 비어있지 않다면 SendIO()
-		// 2025 04 27 여기까지ㅎㅎg
-		if (mSendDataQueue.empty() == true)
+		// send queue push, send queue가 비어있지 않고 queue의 사이즈가 1이라면 SendIO()
+		mSendDataQueue.push(pOverlappedEx);
+		if (mSendDataQueue.size() == 1)
 		{
-			mSendDataQueue.push(pOverlappedEx);
-		}			
-		else
-		{
-			SendIO();
-		}			
+			SendIO();		
+		}
+
+		return true;
+		// return false;				
+	}
+
+	void Close()
+	{
+		// 받은 데이터가 0이면 close한다.
+		
 	}
 
 private:

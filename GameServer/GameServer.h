@@ -63,7 +63,7 @@ public:
 		bool result = targetClient->SendMessage(datasize, data);
 		return result;
 		// return  targetClient->sendMsg(datasize, data);
-	}
+	}	
 
 private:
 	bool CreateWokerThread()
@@ -98,13 +98,18 @@ private:
 			{
 				//클라이언트 접속 종료
 				//클라이언트 정보 초기화
-				// pClientInfos->CloseSocket();
+				pClientInfos->Close();
+				mClientCnt--;
 				mIsWorkerRun = false;
 				continue;
-			}
-			// recv 0 byte  remove 
+			}			 
 
 			auto pOverlappedEx = (stOverlappedEx*)lpOverlapped;
+
+			/*if (IOOperation::ACCEPT != pOverlappedEx->m_Operation && dwIoSize == 0)
+			{
+				pClientInfos->Close();
+			}*/
 
 			if (IOOperation::RECV == pOverlappedEx->m_Operation)
 			{
