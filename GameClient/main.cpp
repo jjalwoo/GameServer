@@ -18,9 +18,7 @@ int main()
 	{
 		std::cout << std::format("서버와 연결 실패!") << std::endl;
 		return -1;
-	}
-	
-	std::cout << std::format("서버에 연결되었습니다!") << std::endl;
+	}	
 
 	// 메시지 송신 및 받기
 	client.SendMsg("Hello, Server! Nice to meet you!");	

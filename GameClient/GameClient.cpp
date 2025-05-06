@@ -47,7 +47,10 @@ bool GameClient::Connect()
 		std::cout << std::format("연결 오류! (에러 코드: {})", WSAGetLastError()) << std::endl;
 		return false;
 	}
+
+	std::cout << "서버에 연결되었습니다!" << std::endl;
 	return true;
+
 }
 
 void GameClient::SendMsg(const std::string& message)
@@ -58,18 +61,21 @@ void GameClient::SendMsg(const std::string& message)
 	{
 		std::cout << std::format("메시지 전송 실패! (에러 코드: {})", WSAGetLastError()) << std::endl;
 	}
-
-	std::cout << std::format("서버에 전송한 바이트 수: {}", sendBytes) << std::endl;
+	else
+	{
+		std::cout << std::format("서버에 전송한 바이트 수: {}", sendBytes) << std::endl;
+	}
 }
+	
 
 std::string GameClient::RecvMsg()
 {
-	char buffer[1024]{ 0 };
+	char buffer[1024] = { 0 };
 	int recvResult = recv(mClientSocket, buffer, sizeof(buffer), 0);
 
 	if (recvResult == 0)
 	{
-		std::cout << std::format("서버와 연결이 종료되었습니다!") << std::endl;
+		std::cout << "서버와의 연결이 종료되었습니다!" << std::endl;
 		Close();
 		return "";
 	}
@@ -78,10 +84,11 @@ std::string GameClient::RecvMsg()
 		std::cout << std::format("데이터 수신 실패! 에러 코드: {}", WSAGetLastError()) << std::endl;
 		Close();
 		return "";
-	}	
+	}
 
-	// 스트링 객체로 변환 후 수신된 데이터 크기만큼 반환
+	// 받은 데이터 크기만큼만 저장하여 반환
 	return std::string(buffer, recvResult);
+
 }
 
 void GameClient::Close()

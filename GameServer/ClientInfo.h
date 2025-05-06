@@ -24,6 +24,8 @@ public:
 
 	int GetIndex() { return mIndex; }
 
+	SOCKET GetSocket() { return mSocket; }
+
 	bool AcceptCompletion()
 	{
 
@@ -54,7 +56,6 @@ public:
 	bool BindRecv()
 	{
 		//wsa recv 처리. 
-
 		DWORD dwFlag = 0;
 		DWORD dwRecvNumBytes = 0;
 
@@ -62,6 +63,9 @@ public:
 		mRecvOverlappedEX.m_wsaBuf.len = MAX_SOCK_RECVBUF;
 		mRecvOverlappedEX.m_wsaBuf.buf = mRecvBuf;
 		mRecvOverlappedEX.m_Operation = IOOperation::RECV;
+
+		std::cout << "WSARecv 호출 시작!" << std::endl;
+
 
 		int nRet = WSARecv(mSocket, &mRecvOverlappedEX.m_wsaBuf, 1, &dwRecvNumBytes, &dwFlag, (LPWSAOVERLAPPED) & (mRecvOverlappedEX), NULL);
 
@@ -72,8 +76,10 @@ public:
 			std::cout << std::format("WSARecv Error: {}, WSAGETLastError()") << std::endl;
 			return false;
 		}
-
+				
+		std::cout << "WSARecv 호출 성공! 데이터 대기 중..." << std::endl;
 		return true;
+
 	}
 
 	void OnRecv(const int index, const char* data, const int size)
@@ -91,6 +97,21 @@ public:
 		// 받은 데이터를 그대로 클라이언트에게 다시 전송
 		SendMessage(size, (char*)data);
 	}
+
+	void Recv(stOverlappedEx* overlappedEx, DWORD dwIoSize)
+	{
+		if (dwIoSize <= 0)
+		{
+			std::cout << std::format("클라이언트 [{}] 데이터 수신 실패 또는 연결 종료", GetIndex()) << std::endl;
+			Close();
+			return;
+		}
+
+		// 받은 데이터 확인
+		std::cout << std::format("클라이언트 [{}] 수신 데이터: {}", GetIndex(), std::string(overlappedEx->m_wsaBuf.buf, dwIoSize)) << std::endl;
+		
+	}
+
 
 	bool BindIOCompletionPort(HANDLE iocpHandle)
 	{
@@ -165,7 +186,7 @@ public:
 			mSendDataQueue.pop();
 		}
 
-		mIsConnect = false;
+		mIsConnect = false;		
 	}
 
 private:
@@ -192,7 +213,7 @@ private:
 	int mIndex = 0;
 	HANDLE mIOCPHandle = INVALID_HANDLE_VALUE;
 
-	int mIsConnect = 0;
+	bool mIsConnect = false;
 	int mLastestClosedTimeSec = 0;
 
 	SOCKET		mSocket = INVALID_SOCKET;

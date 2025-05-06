@@ -23,14 +23,14 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GameServer.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="ClientInfo.h">
+      <Filter>소스 파일</Filter>
     </ClInclude>
     <ClInclude Include="Define.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>소스 파일</Filter>
     </ClInclude>
-    <ClInclude Include="ClientInfo.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="GameServer.h">
+      <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
