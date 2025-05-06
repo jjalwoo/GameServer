@@ -5,6 +5,7 @@
 #include <queue>
 #include <concurrent_queue.h> // ms
 #include <windows.h>
+#include <format>
 
 
 class stClientInfo
@@ -68,11 +69,27 @@ public:
 
 		if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
 		{
-			std::cout << "WSARecv Error : " << WSAGetLastError() << std::endl;
+			std::cout << std::format("WSARecv Error: {}, WSAGETLastError()") << std::endl;
 			return false;
 		}
 
 		return true;
+	}
+
+	void OnRecv(const int index, const char* data, const int size)
+	{
+		// 받은 데이터 체크(nullptr이거나 비어 있다면 반환하지 않도록)
+		if (data == nullptr || size <= 0)
+		{
+			std::cout << std::format("클라이언트 [{}] 로부터 잘못된 데이터 수신", index) << std::endl;
+			return;
+		}
+
+		// 받은 데이터 처리
+		std::cout << std::format("클라이언트 [{}] 로부터 받은 데이터: {}", index, data) << std::endl;
+
+		// 받은 데이터를 그대로 클라이언트에게 다시 전송
+		SendMessage(size, (char*)data);
 	}
 
 	bool BindIOCompletionPort(HANDLE iocpHandle)
@@ -85,7 +102,7 @@ public:
 		HANDLE h = CreateIoCompletionPort((HANDLE)mSocket, iocpHandle, (ULONG_PTR)this, 0);
 		if (h == NULL)
 		{
-			std::cout << "CreateIoCompletionPort Error : " << WSAGetLastError() << std::endl;
+			std::cout << std::format("CreateIoCompletionPort Error: [{}]", WSAGetLastError()) << std::endl;
 			return false;
 		}
 		return true;
@@ -94,20 +111,17 @@ public:
 	void SendCompleted(int size)
 	{
 		// send data 처리 완료
-		std::cout << "Send Completed: " << size << std::endl;
-
-		//sendqueue ? -> sendqueue  pop delete  
+		std::cout << std::format("Send Completed: {}", size) << std::endl;
 
 		// 딜리트와 팝을 하는데 다른 쓰레드에서 없어진 메모리에 접근하면 망하니까 락을 걸어야함
 		std::lock_guard<std::mutex> lock(mSendLock);
 		delete mSendDataQueue.front();
+		mSendDataQueue.front() = nullptr; // 메모리 해제 후 nullptr로 초기화	
 		mSendDataQueue.pop();
-
-		// 1 - send
-
+		
+		//send queue에 남은 데이터가 있으면 SenIO()를 호출하여 계속 처리
 		if (mSendDataQueue.empty() == false)
-		{
-			//send queue에 데이터가 있으면 send를 한다.
+		{			
 			SendIO();
 		}
 	}	
@@ -117,27 +131,41 @@ public:
 		stOverlappedEx* pOverlappedEx = new stOverlappedEx;
 		pOverlappedEx->m_Operation = IOOperation::SEND;
 
-		pOverlappedEx->m_wsaBuf.len = dataSize;
-		/*pOverlappedEx->m_wsaBuf.buf = data;*/		
-		//pOverlappedEx->m_wsaBuf.buf = new char[dataSize];
-
+		pOverlappedEx->m_wsaBuf.len = dataSize;		
+		pOverlappedEx->m_wsaBuf.buf = new char[dataSize];
 		memcpy(pOverlappedEx->m_wsaBuf.buf, data, dataSize);		
 
-		// send queue push, send queue가 비어있지 않고 queue의 사이즈가 1이라면 SendIO()
+		// 데이터 큐에 추가한 후, 큐가 비어있다면 즉시 전송
 		mSendDataQueue.push(pOverlappedEx);
 		if (mSendDataQueue.size() == 1)
 		{
 			SendIO();		
 		}
 
-		return true;
-		// return false;				
+		return true;			
 	}
 
 	void Close()
 	{
-		// 받은 데이터가 0이면 close한다.
-		
+		std::cout << std::format("클라이언트 [{}] 연결 종료", mIndex) << std::endl;
+
+		// 소켓이 유효한지 체크 후 유효하면 소켓 종료
+		if (mSocket != INVALID_SOCKET)
+		{
+			closesocket(mSocket);
+			mSocket = INVALID_SOCKET;
+		}
+
+		// SendDataQueue 정리
+		std::lock_guard<std::mutex> lock(mSendLock);
+		while (!mSendDataQueue.empty())
+		{
+			delete mSendDataQueue.front();
+			mSendDataQueue.front() = nullptr; // 메모리 해제 후 nullptr로 초기화
+			mSendDataQueue.pop();
+		}
+
+		mIsConnect = false;
 	}
 
 private:
@@ -154,7 +182,7 @@ private:
 		// 결과가 에러지만 펜딩이 아닐 시 (펜딩은 현재 대기중인 상태라 오류라고 볼 수 없다)
 		if (res == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
 		{
-			std::cout << "WSASend Error : " << WSAGetLastError() << std::endl;
+			std::cout << std::format("WSARecv Error: {}", WSAGetLastError()) << std::endl;
 			return false;
 		}
 		return true;
@@ -168,7 +196,7 @@ private:
 	int mLastestClosedTimeSec = 0;
 
 	SOCKET		mSocket = INVALID_SOCKET;
-
+	
 	stOverlappedEx mAcceptContext;
 	char mAcceptBuf[64];
 

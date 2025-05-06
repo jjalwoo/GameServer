@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-*  socket ÃÊ±âÈ­ , ¹× °ü·Ã ÇÔ¼ö Á¤ÀÇ
+*  socket ì´ˆê¸°í™” , ë° ê´€ë ¨ í•¨ìˆ˜ ì •ì˜
 */
 
 #include "ClientInfo.h"
@@ -20,33 +20,35 @@ public:
 	}
 public:
 	void Init(int maxIOWorkerThreadCount)
-	{
-		//SOCKET ÃÊ±âÈ­ 
+	{		
+		// WinSock ì´ˆê¸°í™”
 		WSADATA WSAdATA;
 		WSAStartup(MAKEWORD(2, 2), &WSAdATA);
 
+		// ë¹„ë™ê¸° ì†Œì¼“ ìƒì„±
 		WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
 
-
+		// ìµœëŒ€ ì‘ì—… ì“°ë ˆë“œ ê°œìˆ˜ ì„¤ì •
 		MaxIOWorkerThreadCount = maxIOWorkerThreadCount;
 	};
 
-	bool StartServer(const UINT32 maxClientCount_)
+	bool StartServer(const int maxClientCount)
 	{
-		CreateClient(maxClientCount_);
+		CreateClient(maxClientCount);
 
-		//Á¢¼ÓµÈ Å¬¶óÀÌ¾ğÆ® ÁÖ¼Ò Á¤º¸¸¦ ÀúÀåÇÒ ±¸Á¶Ã¼
-		bool bRet = CreateWokerThread();
-		if (false == bRet) {
+		// IOWorker ì“°ë ˆë“œ ìƒì„± ì‹¤íŒ¨ ì‹œ ì¢…ë£Œ
+		if (!CreateWokerThread())
+		{
 			return false;
 		}
 
-		// bRet = CreateAccepterThread();
-		if (false == bRet) {
+		// ì ‘ì† ê´€ë¦¬ ì“°ë ˆë“œ ìƒì„± ì‹¤íŒ¨ ì‹œ ì¢…ë£Œ
+		if (!CreateAccepterThread())
+		{
 			return false;
-		}
+		}	
 
-		printf("¼­¹ö ½ÃÀÛ\n");
+		std::cout << std::format("ì„œë²„ ì‹œì‘") << std::endl;
 		return true;
 	}
 
@@ -57,12 +59,10 @@ public:
 
 	bool SendMsg(int clientIndex, int datasize, char* data)
 	{
-		auto targetClient = GetClientInfo(clientIndex);
-		// return targetClient->sendMsg(datasize, data);
+		auto targetClient = GetClientInfo(clientIndex);		
 
-		bool result = targetClient->SendMessage(datasize, data);
-		return result;
-		// return  targetClient->sendMsg(datasize, data);
+		// ë¹„ë™ê¸° ì†¡ì‹  ìš”ì²­
+		return targetClient->SendMessage(datasize, data);		
 	}	
 
 private:
@@ -75,41 +75,46 @@ private:
 			mIOWorkerThreads.emplace_back([this]() {WorkerThread();});
 		}
 	}
-	// 
-	void WorkerThread()
+	
+	bool CreateAccepterThread()
 	{
-		// ! 
-		stClientInfo* pClientInfos = nullptr;
 
-		bool bSuccess = false;
+	}
 
-		DWORD dwIoSize = 0;
-
-		// ?
-		LPOVERLAPPED lpOverlapped = nullptr;
-
+	void WorkerThread()
+	{		
+		stClientInfo* pClientInfos = nullptr;		
+		bool bSuccess = false;	
+		DWORD dwIoSize = 0;	// IOì—ì„œ ì „ë‹¬ëœ ë°ì´í„° í¬ê¸°
+		LPOVERLAPPED lpOverlapped = nullptr;		
 
 		while (mIsWorkerRun)
 		{
-			// INFINITE   wait time(´ë±â ½Ã°£)ÀÌ ¹«ÇÑ´ë 
+			// INFINITE >> wait time(ëŒ€ê¸° ì‹œê°„)ì´ ë¬´í•œëŒ€ 
 			bSuccess = GetQueuedCompletionStatus(mIOCPHandle, &dwIoSize, (PULONG_PTR)&pClientInfos, &lpOverlapped, INFINITE);
+			auto pOverlappedEx = reinterpret_cast<stOverlappedEx*>(lpOverlapped);
 
-			if (TRUE == bSuccess && 0 == dwIoSize)
+			if (bSuccess == TRUE && dwIoSize == 0)
 			{
-				//Å¬¶óÀÌ¾ğÆ® Á¢¼Ó Á¾·á
-				//Å¬¶óÀÌ¾ğÆ® Á¤º¸ ÃÊ±âÈ­
-				pClientInfos->Close();
-				mClientCnt--;
-				mIsWorkerRun = false;
-				continue;
-			}			 
-
-			auto pOverlappedEx = (stOverlappedEx*)lpOverlapped;
-
-			/*if (IOOperation::ACCEPT != pOverlappedEx->m_Operation && dwIoSize == 0)
-			{
-				pClientInfos->Close();
-			}*/
+				if (pOverlappedEx->m_Operation == IOOperation::ACCEPT)
+				{
+					// í´ë¼ì´ì–¸íŠ¸ê°€ ì •ìƒì ìœ¼ë¡œ ì ‘ì†í–ˆìœ¼ë¯€ë¡œ ì¢…ë£Œí•˜ì§€ ì•ŠìŒ
+					pClientInfos = GetClientInfo(pOverlappedEx->SessionIndex);
+					if (pClientInfos->AcceptCompletion())
+					{
+						++mClientCnt;
+						OnConnect(pClientInfos->GetIndex()); // 
+					}
+				}
+				else
+				{
+					// í´ë¼ì´ì–¸íŠ¸ ì—°ê²° ì¢…ë£Œ
+					pClientInfos->Close();
+					mClientCnt--;
+					mIsWorkerRun = false;
+					continue;
+				}				
+			}			
 
 			if (IOOperation::RECV == pOverlappedEx->m_Operation)
 			{
@@ -118,78 +123,59 @@ private:
 			}
 			else if (IOOperation::SEND == pOverlappedEx->m_Operation)
 			{
-				// send data
-				// pClientInfos->SendData(pOverlappedEx, dwIoSize);
+				// ë°ì´í„° ì†¡ì‹  ì™„ë£Œ ì²˜ë¦¬
 				pClientInfos->SendCompleted(dwIoSize);
-			}
-			else if (IOOperation::ACCEPT == pOverlappedEx->m_Operation)
-			{
-				// accept
-				pClientInfos = GetClientInfo(pOverlappedEx->SessionIndex);
-				if (pClientInfos->AcceptCompletion())
-				{
-					++mClientCnt;
-
-					OnConnect(pClientInfos->GetIndex());
-				}
-
-			}
-
+			}			
 		}
-
 	}
 
-	void CreateClient(const UINT32 maxClientCount_)
+	void CreateClient(const int maxClientCount)
 	{
-		for (UINT32 i = 0; i < maxClientCount_; ++i)
+		// ì„œë²„ ì‹œì‘ ì‹œ ìµœëŒ€ í´ë¼ì´ì–¸íŠ¸ ê°ìˆ˜ ë§Œí¼ ê°ì²´ ìƒì„± í›„ ê´€ë¦¬
+		for (int i = 0; i < maxClientCount; ++i)
 		{
 			auto client = new stClientInfo;
+			// í´ë¼ì´ì–¸íŠ¸ ì¸ë±ìŠ¤ ë° IOCP í•¸ë“¤ ì„¤ì •
 			client->Init(i, mIOCPHandle);
 
+			// ë²¡í„°ì— ì¶”ê°€
 			mClientInfos.push_back(client);
 		}
 	}
 
-	stClientInfo* GetClientInfo(const int cIndex)
-	{
-		/*for (int i = 0; i < mClientInfos.size(); i++)
-		{
-			if (mClientInfos[i]->GetIndex() == cIndex)
-			{
-				return mClientInfos[i];
-			}
-		}*/
-
-		return mClientInfos[cIndex];
+	stClientInfo* GetClientInfo(const int index)
+	{	
+		// ì¸ë±ìŠ¤ì— ë§ëŠ” í´ë¼ë¦¬ì–¸íŠ¸ ì •ë³´ ë°˜í™˜
+		return mClientInfos[index];
 	}
 
 private:
-	// ¿öÄ¿ ¾²·¹µå °³¼ö
+	// ì›Œì»¤ ì“°ë ˆë“œ ê°œìˆ˜
 	UINT32 MaxIOWorkerThreadCount = 0;
 
-	//Å¬¶óÀÌ¾ğÆ® Á¤º¸ ÀúÀå ±¸Á¶Ã¼
+	//í´ë¼ì´ì–¸íŠ¸ ì •ë³´ ì €ì¥ êµ¬ì¡°ì²´
 	std::vector<stClientInfo*> mClientInfos;
 
-	//Å¬¶óÀÌ¾ğÆ®ÀÇ Á¢¼ÓÀ» ¹Ş±âÀ§ÇÑ ¸®½¼ ¼ÒÄÏ
+	//í´ë¼ì´ì–¸íŠ¸ì˜ ì ‘ì†ì„ ë°›ê¸°ìœ„í•œ ë¦¬ìŠ¨ ì†Œì¼“
 	SOCKET      mListenSocket = INVALID_SOCKET;
 
-	//Á¢¼Ó µÇ¾îÀÖ´Â Å¬¶óÀÌ¾ğÆ® ¼ö
+	//ì ‘ì† ë˜ì–´ìˆëŠ” í´ë¼ì´ì–¸íŠ¸ ìˆ˜
 	int         mClientCnt = 0;
 
-	//IO Worker ½º·¹µå
+	//IO Worker ìŠ¤ë ˆë“œ
 	std::vector<std::thread> mIOWorkerThreads;
 
 
-	//Accept ½º·¹µå
+	//Accept ìŠ¤ë ˆë“œ
 	std::thread   mAccepterThread;
 
-	//CompletionPort°´Ã¼ ÇÚµé
+	//CompletionPortê°ì²´ í•¸ë“¤
 	HANDLE      mIOCPHandle = INVALID_HANDLE_VALUE;
 
-	//ÀÛ¾÷ ¾²·¹µå µ¿ÀÛ ÇÃ·¡±×
+	//ì‘ì—… ì“°ë ˆë“œ ë™ì‘ í”Œë˜ê·¸
 	bool      mIsWorkerRun = true;
 
-	//Á¢¼Ó ¾²·¹µå µ¿ÀÛ ÇÃ·¡±×
+	//ì ‘ì† ì“°ë ˆë“œ ë™ì‘ í”Œë˜ê·¸
 	bool      mIsAccepterRun = true;
 };
 
