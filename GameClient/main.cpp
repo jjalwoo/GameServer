@@ -21,7 +21,7 @@ int main()
 	}	
 
 	// 메시지 송신 및 받기
-	client.SendMsg("Hello, Server! Nice to meet you!");	
+	client.SendMsg("Hello, Server!");	
 	std::string response = client.RecvMsg();
 
 	std::cout << std::format("서버 응답: {}", response) << std::endl;

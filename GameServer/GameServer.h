@@ -40,7 +40,7 @@ public:
 		MaxIOWorkerThreadCount = maxIOWorkerThreadCount;
 	};
 
-	bool StartServer(const int maxClientCount)
+	bool StartServer(const int maxClientCount)	
 	{
 		// 1. WSASocket()을 호출하여 리슨 소켓 생성
 		mListenSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -191,28 +191,36 @@ private:
 				continue;
 			}
 
-			std::cout << "IOCP에서 이벤트 감지 완료! (데이터 크기: " << dwIoSize << ")" << std::endl;
+			if (!pOverlappedEx)
+			{
+				std::cout << "lpOverlapped 변환 실패! 이벤트 감지 실패!" << std::endl;
+				continue;
+			}
 
+			std::cout << std::format("IOCP에서 이벤트 감지 완료! (데이터 크기: {})", dwIoSize) << std::endl;
 
 			// 클라이언트 연결 이벤트 처리
 			if (dwIoSize == 0 && pOverlappedEx->m_Operation == IOOperation::ACCEPT)
-			{ 
+			{
 				pClientInfos = GetClientInfo(pOverlappedEx->SessionIndex);
 				if (pClientInfos->AcceptCompletion())
 				{
 					++mClientCnt;
-					OnConnect(pClientInfos->GetIndex()); // 클라이언트 연결 완료 이벤트 호출
+					OnConnect(pClientInfos->GetIndex());
 				}
 				else
 				{
 					std::cout << "클라이언트 접속 실패!" << std::endl;
 					pClientInfos->Close();
 				}
+				continue;
 			}
-			else if (dwIoSize == 0) // 클라이언트 연결 종료 처리
+
+			// 클라이언트 연결 종료 처리
+			if (dwIoSize == 0)
 			{
 				std::cout << "클라이언트 연결 종료!" << std::endl;
-				RemoveClient(pClientInfos); // 클라이언트 안전하게 제거
+				RemoveClient(pClientInfos);
 				--mClientCnt;
 				continue;
 			}
@@ -222,19 +230,24 @@ private:
 			{
 				std::cout << "수신된 데이터 처리 중..." << std::endl;
 				pClientInfos->Recv(pOverlappedEx, dwIoSize);
-				pClientInfos->OnRecv(pClientInfos->GetIndex(), pOverlappedEx->m_wsaBuf.buf, dwIoSize);		
-				std::cout << "OnRecv 호출!" << std::endl;
 
-				// 데이터 수신 완료 후 다시 `WSARecv()` 호출하여 지속적인 수신 처리
+				// 받은 데이터 정상 출력 후 다시 송신
+				std::string receivedData(pOverlappedEx->m_wsaBuf.buf, dwIoSize);
+				std::cout << std::format("클라이언트 [{}]로부터 받은 데이터: {}", pClientInfos->GetIndex(), receivedData) << std::endl;
+				pClientInfos->SendMessage(dwIoSize, pOverlappedEx->m_wsaBuf.buf);
+
+				std::cout << "OnRecv 호출 완료!" << std::endl;
+
+				// 다시 `WSARecv()` 호출하여 지속적인 수신 처리
 				pClientInfos->BindRecv();
 			}
-			// 데이터 송신 완료 이벤트 처리
 			else if (pOverlappedEx->m_Operation == IOOperation::SEND)
 			{
 				pClientInfos->SendCompleted(dwIoSize);
 			}
 		}
 	}
+
 
 	void CreateClient(const int maxClientCount)
 	{

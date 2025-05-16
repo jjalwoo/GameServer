@@ -7,7 +7,7 @@ int main()
     int maxIOWorkerThreadCount = 10;
     int maxClientCount = 100;
 
-    GameServer server;
+    GameServer server;    
     server.Init(maxIOWorkerThreadCount);
 
     if (!server.StartServer(maxClientCount))
