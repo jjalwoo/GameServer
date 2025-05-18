@@ -1,33 +1,45 @@
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <iostream>
-#include "GameClient.h"
+#include <string>
+
+
+#pragma comment(lib, "ws2_32.lib")
 
 int main()
 {
-	GameClient client;
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+        std::cerr << "WSAStartup failed\n";
+        return 1;
+    }
 
-	// 서버 IP와 포트 번호 설정
-	// bool initResult = client.Init("127.0.0.1", 8080);
-	if (!client.Init("127.0.0.1", 8080))
-	{
-		std::cout << std::format("클라이언트 초기화 실패!") << std::endl;
-		return -1;
-	}
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == INVALID_SOCKET) {
+        std::cerr << "socket() failed: " << WSAGetLastError() << "\n";
+        WSACleanup();
+        return 1;
+    }
 
-	// 서버와 연결
-	if (!client.Connect())
-	{
-		std::cout << std::format("서버와 연결 실패!") << std::endl;
-		return -1;
-	}	
+    sockaddr_in serverAddr = {};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(8080);
+    inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
-	// 메시지 송신 및 받기
-	client.SendMsg("Hello, Server!");	
-	std::string response = client.RecvMsg();
+    if (connect(sock, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        std::cerr << "connect() failed: " << WSAGetLastError() << "\n";
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
 
-	std::cout << std::format("서버 응답: {}", response) << std::endl;
+    std::string s = "Hi Server!";
+    int a = send(sock, s.c_str(), s.size(), 0);
+    if (a == SOCKET_ERROR)
+        return 1;
 
-	// 클라이언트 종료
-	client.Close();
+    std::cout << "Connected. Type 메시지 and press Enter. 빈 줄 입력 시 종료.\n";
 
-	return 0;
+    while (true)
+        ;
 }

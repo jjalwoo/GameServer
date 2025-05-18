@@ -18,6 +18,9 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="IOCPServer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="GameServer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -27,6 +30,9 @@
       <Filter>소스 파일</Filter>
     </ClInclude>
     <ClInclude Include="Define.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="IOCPServer.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
     <ClInclude Include="GameServer.h">
