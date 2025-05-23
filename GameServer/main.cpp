@@ -7,7 +7,10 @@ int main()
     GameServer server;
     server.Init(4);  
     server.BindandListen(8080);
-    server.StartServer(100);
+    if (!server.StartServer(100))
+    {
+        std::cout << "Server Start Fail!" << std::endl;
+    }
 
     while (true)
         ;

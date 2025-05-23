@@ -88,7 +88,6 @@ std::string GameClient::RecvMsg()
 
 	// 받은 데이터 크기만큼만 저장하여 반환
 	return std::string(buffer, recvResult);
-
 }
 
 void GameClient::Close()

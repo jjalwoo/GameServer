@@ -9,7 +9,8 @@
 int main()
 {
     WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) 
+    {
         std::cerr << "WSAStartup failed\n";
         return 1;
     }
@@ -26,13 +27,14 @@ int main()
     serverAddr.sin_port = htons(8080);
     inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
-    if (connect(sock, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+    if (connect(sock, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
+    {
         std::cerr << "connect() failed: " << WSAGetLastError() << "\n";
         closesocket(sock);
         WSACleanup();
         return 1;
     }
-
+   
     std::string s = "Hi Server!";
     int a = send(sock, s.c_str(), s.size(), 0);
     if (a == SOCKET_ERROR)
