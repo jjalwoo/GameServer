@@ -192,8 +192,8 @@ private:
         }
 
         return nullptr;
-    }
-
+    }        
+    
     stClientInfo* GetClientInfo(const UINT32 clientIndex_) const
     {
         return mClientInfos[clientIndex_];

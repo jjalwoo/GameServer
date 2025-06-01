@@ -85,7 +85,7 @@ public:
 
     bool PostAccept(SOCKET listenSock_, const UINT64 curTimeSec_)
     {
-        printf_s("PostAccept. client Index: %d\n", GetIndex());
+        // printf_s("PostAccept. client Index: %d\n", GetIndex());
 
         mLatestClosedTimeSec = UINT32_MAX;
 
@@ -233,7 +233,7 @@ public:
         delete mSendDataqueue.front();
 
         mSendDataqueue.pop();
-
+       
         /*
         * - 실질적인 Send는 SendIO함수에서 처리한다.
         * - sendQueue의 데이터는 하나씩, 처리될 때마다 SendIO를 통한다.
