@@ -23,8 +23,9 @@ public:
 			// 0보다 크다면 읽지 않은 데이터가 있는 뜻이니까 읽지 않은 데이터를 앞으로 옮긴 후 채운다.
 			if(remaining > 0)
 			{
-				// Move remaining data to the start of the buffer
-				// ! 
+				// 버퍼에 리드한 데이터부터 처리되지 않은 데이터를 앞으로 옮긴다.
+				memmove(mPacketDataBuffer, &mPacketDataBuffer[mPacketDataBufferReadPos], remaining);
+				mPacketDataBufferWritePos = remaining;
 			}
 			else if(remaining == 0)	// 버퍼가 비웠거나, 다 읽었으므로 버퍼를 처음부터 시작한다.
 			{
