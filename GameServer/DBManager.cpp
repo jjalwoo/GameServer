@@ -6,7 +6,7 @@ DBManager::DBManager()
 	mConn = mysql_init(nullptr);
 	if(mConn == nullptr)
 	{
-		cerr << "MySQL init failed!" << endl;
+		cerr << "MySQL init 실패!" << endl;
 	}
 }
 
@@ -19,11 +19,11 @@ bool DBManager::Connect(const string& host, const string& user, const string& pw
 {
 	if (mysql_real_connect(mConn, host.c_str(), user.c_str(), pw.c_str(), db.c_str(), port, nullptr, 0) == nullptr)
 	{
-		cerr << "MySQL connect failed!: " << mysql_error(mConn) << endl;
+		cerr << "MySQL Connect 실패: " << mysql_error(mConn) << endl;
 		return false;
 	}
 
-	cout << "DB Connected successfully!" << endl;
+	cout << "DB Connected 성공!" << endl;
 	return true;
 }
 

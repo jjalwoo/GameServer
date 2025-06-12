@@ -163,6 +163,7 @@ StyleCopReport.xml
 *.vcxproj
 *.vcxproj.filters
 *.user
+config.json
 
 # Chutzpah Test files
 _Chutzpah*
