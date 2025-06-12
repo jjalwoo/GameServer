@@ -30,6 +30,9 @@
     <ClCompile Include="ClientInfo.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="DBManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientInfo.h">
@@ -45,6 +48,9 @@
       <Filter>소스 파일</Filter>
     </ClInclude>
     <ClInclude Include="User.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DBManager.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>

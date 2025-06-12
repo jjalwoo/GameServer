@@ -1,3 +1,4 @@
+#include "DBManager.h"
 #include "GameClient.h"
 
 GameClient::GameClient() : mClientSocket(INVALID_SOCKET)
