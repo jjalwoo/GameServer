@@ -5,6 +5,7 @@
 
 int main()
 {
+    // db
 	DBManager dbManager;
     if (dbManager.Connect("127.0.0.1", "root", "wkfdnek1^^", "test_db", 3306))
     {
