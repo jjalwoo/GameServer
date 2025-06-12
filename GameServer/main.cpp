@@ -1,13 +1,20 @@
 #include "GameServer.h"
 #include "DBManager.h"
+#include "DBConfig.h"
 #include <thread>
 #include <iostream>
 
 int main()
 {
-    // db
+	DBConfig dbConfig;
+    if (!dbConfig.LoadConfig("config.json"))
+    {
+        std::cerr << "Failed to load DB config!" << std::endl;
+        return -1;
+    }
+
 	DBManager dbManager;
-    if (dbManager.Connect("127.0.0.1", "root", "wkfdnek1^^", "test_db", 3306))
+    if (dbManager.Connect(dbConfig.host, dbConfig.user, dbConfig.password, dbConfig.dbname, dbConfig.port))
     {
         dbManager.ExecuteQuery("SELECT * FROM orders");
     }
