@@ -14,10 +14,12 @@ int main()
     }
 
 	DBManager dbManager;
-    if (dbManager.Connect(dbConfig.host, dbConfig.user, dbConfig.password, dbConfig.dbname, dbConfig.port))
-    {
-        dbManager.ExecuteQuery("SELECT * FROM orders");
-    }
+    dbManager.Connect(dbConfig.host, dbConfig.user, dbConfig.password, dbConfig.dbname, dbConfig.port);
+    
+
+    dbManager.Insert(5, "ccw_pay", 125.00);
+    dbManager.Delete(115);
+    dbManager.AllSelect();
 
     GameServer server;
     server.Init(4);  
