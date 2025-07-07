@@ -21,13 +21,15 @@ class RedisManager
 {
 public:
 	RedisManager() = default;
+	RedisManager(const RedisManager&) = delete;
+	RedisManager& operator=(const RedisManager&) = delete;
 	~RedisManager() = default;
 
 	bool Run(const string& host, const string& port, int threadCount = 4);
 	void WorkerLoop();
 
 private:
-	Redis mRedis;
+	std::unique_ptr<Redis> mRedis;
 	bool msIsRun = false;
 	deque<RedisTask> mRequestQueue;
 	deque<RedisTask> mResponseQueue;

@@ -9,7 +9,7 @@ bool RedisManager::Run(const string& host, const string& port, int threadCount)
 
     try
     {
-        mRedis = Redis(options);
+        mRedis = std::make_unique<Redis>(options);
         return true; // 정상 연결 성공
     }
     catch (const std::exception& e)
