@@ -5,6 +5,10 @@
 # Prerequisites
 *.d
 
+*.pb.cc
+*.pb.h
+
+
 # Compiled Object files
 *.slo
 *.lo
